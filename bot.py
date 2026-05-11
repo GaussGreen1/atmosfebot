@@ -1,14 +1,9 @@
 import json
 import os
-import random
-import time
 from datetime import datetime
 from pathlib import Path
 
 import requests
-from dotenv import load_dotenv
-
-load_dotenv()
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -28,10 +23,6 @@ URLS = [
 ]
 
 SEEN_FILE = "seen_slots.json"
-
-CHECK_COUNT = 0
-LAST_HEARTBEAT = 0
-HEARTBEAT_INTERVAL = 60 * 60 * 6  # every 6 hours
 
 
 def load_seen():
@@ -98,7 +89,7 @@ def check_url(config):
 
             t2 = seat.get("T2", 0)
 
-            # Tables for 2 available
+            # Table for 2 available
             if t2 > 0:
 
                 available.append(
@@ -115,13 +106,11 @@ def check_url(config):
 
 
 def main():
-    global CHECK_COUNT
-
-    CHECK_COUNT += 1
-
-    print(f"[CHECK #{CHECK_COUNT}] Checking ATMosfera...")
+    print("Checking ATMosfera availability...")
 
     seen = load_seen()
+
+    found_any = False
 
     for config in URLS:
 
@@ -145,12 +134,14 @@ def main():
                     print("[SKIP] Already notified:", key)
                     continue
 
+                found_any = True
+
                 message = (
                     f"🚨 ATMosfera table for 2 available!\n\n"
                     f"📅 Date: {slot['day']}\n"
                     f"🕗 Time: {slot['round']}\n"
                     f"🚋 Tram: {slot['tram']}\n"
-                    f"🍽️ Tables for 2: {slot['t2']}\n"
+                    f"🍽️ Tables for 2 available: {slot['t2']}\n"
                     f"🎟️ Service: {slot['service']}\n\n"
                     f"https://atmosfera.atm.it/"
                 )
@@ -162,6 +153,7 @@ def main():
                 seen.add(key)
 
         except Exception as e:
+
             print(f'[ERROR] {config["name"]}: {e}')
 
             try:
@@ -175,46 +167,11 @@ def main():
 
     save_seen(seen)
 
+    if not found_any:
+        print("[DONE] No new tables found")
+    else:
+        print("[DONE] Notifications sent")
+
 
 if __name__ == "__main__":
-
-    print("🚀 ATMosfera watcher started")
-
-    try:
-        send_telegram_message("🚀 ATMosfera watcher started")
-    except Exception as e:
-        print("[ERROR] Could not send startup message:", e)
-
-    while True:
-
-        try:
-            main()
-
-            now = time.time()
-
-            if now - LAST_HEARTBEAT > HEARTBEAT_INTERVAL:
-
-                send_telegram_message(
-                    f"✅ ATMosfera watcher alive\n"
-                    f"Checks completed: {CHECK_COUNT}"
-                )
-
-                LAST_HEARTBEAT = now
-
-        except Exception as e:
-
-            print("[FATAL ERROR]", e)
-
-            try:
-                send_telegram_message(
-                    f"❌ ATMosfera fatal error\n\n{str(e)}"
-                )
-            except:
-                pass
-
-        # Random delay between 55-75 sec
-        sleep_time = random.randint(55, 75)
-
-        print(f"[SLEEP] {sleep_time} seconds")
-
-        time.sleep(sleep_time)
+    main()
