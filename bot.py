@@ -26,6 +26,14 @@ URLS = [
         "name": "20:30 Dinner",
         "url": "https://atmosfera.atm.it/Home/GetAvailableDates?serviceId=2&tramId=2&reservationId=0&mealTime=20%3A30",
     },
+    {
+        "name": "13:00 Lunch",
+        "url": "https://atmosfera.atm.it/Home/GetAvailableDates?serviceId=12&tramId=1&reservationId=0&mealTime=13:00",
+    },
+    {
+        "name": "13:15 Lunch",
+        "url": "https://atmosfera.atm.it/Home/GetAvailableDates?serviceId=18&tramId=2&reservationId=0&mealTime=13%3A15",
+    },
 ]
 
 SEEN_FILE = "seen_slots.json"
